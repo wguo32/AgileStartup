@@ -22,6 +22,7 @@ public class JSONUtils {
     public String json(Object obj) {
         return json(obj, new ArrayList<String>());
     }
+    
 
     public String json(Object obj, List<String> ignoredFields) {
         JSONObject ja = JSONObject.fromObject(obj);
