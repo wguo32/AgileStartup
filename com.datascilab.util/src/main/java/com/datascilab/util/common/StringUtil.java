@@ -30,9 +30,16 @@ public class StringUtil {
 
 	}
 
+	public String toStringWithout_n_r(String input) {
+		String rtn = input;
+		if (!Strings.isNullOrEmpty(input)) {
+			rtn = rtn.replaceAll("\\s*|\t|\r|\n", "");
+		}
+		return rtn;
+	}
+
 	public String fileToString(File file, String encoding) {
-		
-		
+
 		if (file != null) {
 			if (!file.exists() || (file.exists() && !file.isFile())) {
 				return null;
