@@ -43,5 +43,8 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib_ext/chardet-1.0.jar"/>
+	<classpathentry kind="lib" path="lib_ext/cpdetector_1.0.10.jar"/>
+	<classpathentry kind="lib" path="lib_ext/jargs-1.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
