@@ -18,6 +18,7 @@ public class StringReplaceAll {
 		// 第二种方式
 
 		myString = myString.replaceAll("(\r\n|\r|\n|\n\r)", "<br>");
+		myString = myString.replaceAll(" ", "");
 	}
 
 }
