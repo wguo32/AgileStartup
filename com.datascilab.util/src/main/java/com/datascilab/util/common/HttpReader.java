@@ -17,18 +17,26 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.XPatherException;
+
+import com.google.common.base.Strings;
 
 //TODO
 public class HttpReader {
@@ -44,7 +52,14 @@ public class HttpReader {
 
 	TagNode rootNode = null;
 
-	String htmlAsString = null;
+	String htmlString = null;
+
+	public HttpReader(String url, boolean allowCircularRedirect) {
+
+		super();
+		this.url = url;
+		init();
+	}
 
 	public HttpReader(String url) {
 
@@ -60,9 +75,12 @@ public class HttpReader {
 				.setSocketTimeout(5000).setConnectTimeout(5000).build();// 设置请求和传输超时时间
 		HttpGet httpget;
 		HttpResponse response;
-		String encode;
+		String encode = null;
 		try {
 			httpget = new HttpGet(url);
+			Header header = new BasicHeader("User-Agent",
+					"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)");
+			httpget.setHeader(header);
 			httpget.setConfig(requestConfig);
 			response = httpclient.execute(httpget);
 			HttpEntity entity = response.getEntity();
@@ -70,25 +88,38 @@ public class HttpReader {
 				if (entity != null) {
 					entity = new BufferedHttpEntity(entity);
 				}
-				entity.getContentType();
+				// entity.getContentType();
 				// read stream
 				in = entity.getContent();
-				// ----------------
-				rootNode = cleaner.clean(in, "UTF-8");
-				encode = getFileEncode(url);
-				if (encode.toLowerCase().contains("utf")) {
-					htmlAsString = EntityUtils.toString(entity);
-				} else if (encode.toLowerCase().contains("windows")) {
-					htmlAsString = EntityUtils.toString(entity);
-				} else if (encode.toLowerCase().contains("gb")) {
-					htmlAsString = Inputstr2Str_byteArr(in,
-							encode.toUpperCase());
-					htmlAsString = new String(htmlAsString.getBytes(), "UTF-8");
-				} else if (encode.toLowerCase().contains("iso")) {
-					htmlAsString = new String(EntityUtils.toString(entity)
-							.getBytes("ISO_8859_1"), "UTF-8");
+				String contentCharset = getContentCharSet(entity);
+				if (contentCharset.equalsIgnoreCase("utf-8")) {
+					htmlString = Inputstr2Str_byteArr(in, "utf-8");
 				} else {
-					htmlAsString = EntityUtils.toString(entity);
+					// read in default
+					htmlString = Inputstr2Str_byteArr(in, contentCharset);
+					// universal
+					htmlString = new String(htmlString.getBytes(), "utf-8");
+				}
+				// ----------------
+				// rootNode = cleaner.clean(in, "UTF-8");
+				// read text
+				// htmlString = EntityUtils.toString(entity);// Paradigms
+				if (Strings.isNullOrEmpty(contentCharset)) {
+					encode = getFileEncode(url);
+					if (encode.toLowerCase().contains("utf")) {
+						htmlString = EntityUtils.toString(entity);
+					} else if (encode.toLowerCase().contains("windows")) {
+						htmlString = EntityUtils.toString(entity);
+					} else if (encode.toLowerCase().contains("gb")) {
+						htmlString = Inputstr2Str_byteArr(in,
+								encode.toUpperCase());
+						htmlString = new String(htmlString.getBytes(), "UTF-8");
+					} else if (encode.toLowerCase().contains("iso")) {
+						htmlString = new String(EntityUtils.toString(entity)
+								.getBytes("ISO_8859_1"), "UTF-8");
+					} else {
+						htmlString = EntityUtils.toString(entity);
+					}
 				}
 
 			} else {
@@ -175,16 +206,35 @@ public class HttpReader {
 		return rootNode;
 	}
 
-	public String getHtmlAsString() {
-
-		return htmlAsString;
-	}
-
 	public static void main(String[] args) {
 
 		HttpReader hr = new HttpReader("http://news.yahoo.com");
-		String s = hr.getHtmlAsString();
-		System.out.println(s.replaceAll("[\r|\n\t]", ""));
+		// String s = hr.getHtmlString_iso2utf();
+		// System.out.println(s.replaceAll("[\r|\n\t]", ""));
+
+	}
+
+	public String getHtmlString() {
+
+		return htmlString;
+	}
+
+	public static void getFileEncoding(String urlStr)
+			throws MalformedURLException, IOException {
+
+		URL url = new URL(urlStr);
+		CodepageDetectorProxy codepageDetectorProxy = CodepageDetectorProxy
+				.getInstance();
+
+		codepageDetectorProxy.add(JChardetFacade.getInstance());
+		codepageDetectorProxy.add(ASCIIDetector.getInstance());
+		codepageDetectorProxy.add(UnicodeDetector.getInstance());
+		codepageDetectorProxy.add(new ParsingDetector(false));
+		codepageDetectorProxy.add(new ByteOrderMarkDetector());
+
+		Charset charset = codepageDetectorProxy.detectCodepage(url);
+		System.out.println(charset.name());
+
 	}
 
 	public String getFileEncode(String urlStr) throws MalformedURLException,
@@ -311,6 +361,47 @@ public class HttpReader {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public TagNode getRootNode() {
+
+		return rootNode;
+	}
+
+	public static String getContentCharSet(final HttpEntity entity) {
+
+		if (entity == null) {
+			throw new IllegalArgumentException("HTTP entity may not be null");
+		}
+		String charset = null;
+		if (entity.getContentType() != null) {
+			HeaderElement values[] = entity.getContentType().getElements();
+			if (values.length > 0) {
+				NameValuePair param = values[0].getParameterByName("charset");
+				if (param != null) {
+					charset = param.getValue();
+				}
+			}
+		}
+
+		if (charset == null) {
+			try {
+				String s = EntityUtils.toString(entity);
+				Pattern p = Pattern.compile("charset=([a-zA-Z0-9|-]+)");
+				Matcher m = p.matcher(s);
+				if (m.find()) {
+					charset = m.group();
+					if (charset != null && !Strings.isNullOrEmpty(charset)) {
+						String[] sArr = charset.split("=");
+						if (sArr.length >= 2) {
+							charset = sArr[1];
+						}
+					}
+				}
+			} catch (Exception e) {
+			}
+		}
+		return charset;
 	}
 
 }
