@@ -79,7 +79,7 @@ public class HttpReader {
 		try {
 			httpget = new HttpGet(url);
 			Header header = new BasicHeader("User-Agent",
-					"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)");
+					"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)");// some server may deny access for unknown client
 			httpget.setHeader(header);
 			httpget.setConfig(requestConfig);
 			response = httpclient.execute(httpget);
