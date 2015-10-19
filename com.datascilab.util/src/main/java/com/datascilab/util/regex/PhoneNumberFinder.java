@@ -20,7 +20,7 @@ public class PhoneNumberFinder {
 		if (Strings.isNullOrEmpty(in)) {
 			return null;
 		}
-		String str = null;
+		String str = "";
 		if (Strings.isNullOrEmpty(in)) {
 			return str;
 		}
@@ -34,6 +34,9 @@ public class PhoneNumberFinder {
 				str += m.group();
 				break;
 			}
+		}
+		if(Strings.isNullOrEmpty(str)){
+			str=null;
 		}
 
 		return str;

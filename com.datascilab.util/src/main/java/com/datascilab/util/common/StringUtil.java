@@ -108,5 +108,14 @@ public class StringUtil {
 		}
 		return rtn;
 	}
+	
+	public static String getStr_replaceNextLineChar(String str){
+		String tmp= str;
+		if(!Strings.isNullOrEmpty(str)){
+			tmp = str.replaceAll("\\\\n", "\n");
+		}
+		return tmp;
+		
+	}
 
 }
