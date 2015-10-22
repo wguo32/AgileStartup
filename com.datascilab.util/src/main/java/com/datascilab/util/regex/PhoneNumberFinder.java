@@ -14,8 +14,8 @@ public class PhoneNumberFinder {
 
 	public static String getPhone(String in, boolean more) {// cope with
 
-															// situation like
-															// l3九799陆o0O;
+		// situation like
+		// l3九799陆o0O;
 
 		if (Strings.isNullOrEmpty(in)) {
 			return null;
@@ -35,8 +35,24 @@ public class PhoneNumberFinder {
 				break;
 			}
 		}
-		if(Strings.isNullOrEmpty(str)){
-			str=null;
+		if (Strings.isNullOrEmpty(str)) {
+			str = null;
+		}
+
+		return str;
+	}
+
+	public String getPhoneSimple(String in) {
+
+		String str = null;
+		if (Strings.isNullOrEmpty(in)) {
+			return str;
+		}
+		Pattern p = Pattern
+				.compile("([0-9|壹|贰|叁|肆|伍|陆|柒|捌|玖|零|一|二|三|四|五|六|七|八|九| |O|o]{7,})");
+		Matcher m = p.matcher(in);
+		if (m.find()) {
+			str = m.group();
 		}
 
 		return str;
