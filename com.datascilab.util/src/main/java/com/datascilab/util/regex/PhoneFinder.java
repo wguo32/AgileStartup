@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
 
-public class PhoneNumberFinder {
+public class PhoneFinder {
 
 	public static String getPhone(String in) {
 
@@ -25,7 +25,7 @@ public class PhoneNumberFinder {
 			return str;
 		}
 		Pattern p = Pattern
-				.compile("([0-9|壹|贰|叁|肆|伍|陆|柒|捌|玖|零|一|二|三|四|五|六|七|八|九| |O|Z|z|o|l]{7,})");
+				.compile("([0-9|壹|贰|叁|肆|伍|陆|柒|捌|玖|零|幺|一|二|三|四|五|六|七|八|九| |O|Z|z|o|l|-]{7,})");
 		Matcher m = p.matcher(in);
 		while (m.find()) {
 			if (more) {
@@ -49,7 +49,7 @@ public class PhoneNumberFinder {
 			return str;
 		}
 		Pattern p = Pattern
-				.compile("([0-9|壹|贰|叁|肆|伍|陆|柒|捌|玖|零|一|二|三|四|五|六|七|八|九| |O|o]{7,})");
+				.compile("([0-9|壹|贰|叁|肆|伍|陆|柒|捌|玖|零|幺|一|二|三|四|五|六|七|八|九| |O|Z|z|o|l|-]{7,})");
 		Matcher m = p.matcher(in);
 		if (m.find()) {
 			str = m.group();
